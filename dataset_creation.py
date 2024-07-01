@@ -7,9 +7,6 @@ dataset_directory = "./datasets/crop_part1"
 script_dir = os.path.dirname(__file__)
 os.chdir(script_dir)
 
-print(len(os.listdir("datasets/crop_part1")))
-print(len(os.listdir("datasets/UTKFace")))
-
 df = pd.DataFrame()
 
 def extract_info_from_name(directory):
