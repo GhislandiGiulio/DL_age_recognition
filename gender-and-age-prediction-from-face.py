@@ -110,7 +110,7 @@ for container in ax.containers:
 # creazione grafici distribuzione dell'età 
 plt.figure(figsize=(10, 8))
 ax = sns.displot(x=df_train["age"])
-ax.set_title("Train - Age")
+ax.set_titles("Train - Age")
 plt.show()
 
 ## validation
@@ -125,7 +125,7 @@ for container in ax.containers:
 # creazione grafici distribuzione dell'età 
 plt.figure(figsize=(10, 8))
 ax = sns.displot(x=df_valid["age"])
-ax.set_title("Valid - Age")
+ax.set_titles("Valid - Age")
 plt.show()
 
 ## Test
@@ -140,7 +140,7 @@ for container in ax.containers:
 # creazione grafici distribuzione dell'età 
 plt.figure(figsize=(10, 8))
 ax = sns.displot(x=df_test["age"])
-ax.set_title("Test - Age")
+ax.set_titles("Test - Age")
 plt.show()
 
 
@@ -251,14 +251,14 @@ convolution = Sequential([
 
 gender_branch = Sequential([
     Dense(256, activation='relu'),
-    Dropout(0.3),
+    Dropout(0.4),
     Dense(1, activation='sigmoid')
 ])
 
 # Define the age branch
 age_branch = Sequential([
     Dense(256, activation='relu'),
-    Dropout(0.3),
+    Dropout(0.4),
     Dense(1, activation='relu')
 ])
 
@@ -275,15 +275,31 @@ output_age = age_branch(flattened_image)
 # definizione modello
 model = Model(inputs=[inputs], outputs=[output_gender, output_age])
 
-model.compile(loss=['binary_crossentropy', 'mae'],
-              optimizer='adam',
+from keras.src.optimizers import Adam
+from tensorflow.python.keras.callbacks import EarlyStopping
+from keras.src.callbacks import ReduceLROnPlateau
+
+model.compile(optimizer=Adam(learning_rate=1e-3), 
+              loss=['binary_crossentropy', 'mae'], 
               metrics=['accuracy', 'mae'])
+# lr scheduler per adattare il learning rate in base alle epoche
+lr_scheduler = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1)
+model_es = EarlyStopping(monitor='val_loss', mode='min', patience=2, restore_best_weights=True)
 
 # stampa del modello
 model.summary()
 
 # allenamento del modello
-history = model.fit(x=train_img_arr, y=[train_gender_arr, train_age_arr], batch_size=64, epochs=25, validation_data=(valid_img_arr, [valid_gender_arr, valid_age_arr]))
+history = model.fit(x=train_img_arr, 
+                    y=[train_gender_arr, train_age_arr], 
+                    batch_size=64, 
+                    epochs=25, 
+                    validation_data=(valid_img_arr, [valid_gender_arr, valid_age_arr]),
+                    callbacks=[lr_scheduler, model_es]
+                    )
+
+# salvataggio del modello
+model.save("age_sex_prediction_model.keras")
 
 ###
 ### Test & Risultati
@@ -300,8 +316,8 @@ plt.figure(figsize=(10, 8))
 
 plt.title("Gender Accuracy")
 
-plt.plot(history_df["dense_1_accuracy"])
-plt.plot(history_df["val_dense_1_accuracy"])
+plt.plot(history_df["sequential_1_accuracy"])
+plt.plot(history_df["val_sequential_1_accuracy"])
 
 plt.legend(["train", "valid"])
 
@@ -315,8 +331,8 @@ plt.figure(figsize=(10, 8))
 
 plt.title("Age MAE")
 
-plt.plot(history_df["dense_3_mae"])
-plt.plot(history_df["val_dense_3_mae"])
+plt.plot(history_df["sequential_2_mae"])
+plt.plot(history_df["val_sequential_2_mae"])
 
 plt.legend(["train", "valid"])
 
@@ -350,7 +366,7 @@ df_test.head()
 
 
 def visualize_results(df: pd.DataFrame):
-    fig, axes = plt.subplots(16, 16, figsize=(12, 12))
+    fig, axes = plt.subplots(4, 4, figsize=(12, 12))
 
     for i, ax in enumerate(axes.ravel()):
         if i < len(df):
