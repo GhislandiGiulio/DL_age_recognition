@@ -1,6 +1,7 @@
 #others
 .vscode
 my_model.keras
+age_sex_prediction_model.keras
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
