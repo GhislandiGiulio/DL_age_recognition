@@ -80,12 +80,16 @@ def video_capture():
         # prediction of age of frame
         resized_gray_image = process_frame(frame_rgb_flipped)
 
-        pred_age = model.predict(resized_gray_image)
+        pred_age = model.predict(resized_gray_image, verbose=0)
+
+        pred_age = np.round(pred_age).astype(int)
+        pred_age = pred_age.reshape(-1)
 
         show_age(pred_age, frame_with_oval)
 
         # Display the frame
         stframe.image(frame_with_oval, channels="RGB")
+
 
 
         # Add a small delay to make the loop run at a reasonable speed
@@ -96,9 +100,7 @@ def video_capture():
 
 def show_age(pred_age, frame):
 
-    print(pred_age)
-
-    text = f"Age: {pred_age}"
+    text = f"Age: {pred_age//100}"
 
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 1
@@ -141,6 +143,8 @@ def process_frame(frame):
     gray_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
 
     resized_gray_image = cv2.resize(gray_image, (128, 128), interpolation=cv2.INTER_LANCZOS4)
+    
+    np.save("./output.jpg", frame)
 
     resized_gray_image = np.expand_dims(resized_gray_image, axis=-1)
 
