@@ -279,7 +279,7 @@ plt.savefig(f"{plots_dir}/age_MAE.jpg")
 ## TEST
 from tensorflow.keras.models import load_model
 
-model = load_model("age_prediction_model2.keras")
+model = load_model("age_prediction_model.keras")
 
 # fase di testing
 pred_age = model.predict(test_img_arr, verbose=0)
