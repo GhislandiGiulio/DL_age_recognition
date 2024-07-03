@@ -234,7 +234,7 @@ from keras.src.optimizers import Adam
 from tensorflow.python.keras.callbacks import EarlyStopping
 from keras.src.callbacks import ReduceLROnPlateau
 
-"""model.compile(optimizer=Adam(learning_rate=1e-3), 
+model.compile(optimizer=Adam(learning_rate=1e-3), 
               loss=['mae'], 
               metrics=['mae'])
 # lr scheduler per adattare il learning rate in base alle epoche
@@ -273,7 +273,7 @@ plt.plot(history_df["val_mae"])
 
 plt.legend(["train", "valid"])
 
-plt.savefig(f"{plots_dir}/age_MAE.jpg")"""
+plt.savefig(f"{plots_dir}/age_MAE.jpg")
 
 
 ## TEST
