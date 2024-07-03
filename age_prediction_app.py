@@ -24,18 +24,8 @@ if need_loading:
 # titolo dell'applicazione
 st.title("Age Prediction")
 
-# Variable to store the webcam capture object
-cap = None
-
-# Variable to store the last captured frame
-captured_frame = None
-
 # frame webcam
 stframe = st.empty()
-
-take_picture_button = None
-
-captured_frame = None
 
 
 def video_capture():
@@ -43,111 +33,109 @@ def video_capture():
     # Open the webcam
     cap = cv2.VideoCapture(0)
 
-    # Check if the webcam is opened correctly
+    # check cattura webcam
     if not cap.isOpened():
         st.error("Could not open webcam.")
         cap.release()
         st.stop()
 
-    # Frame streaming loop
+    # loop di streaming dei frame
     while cap.isOpened():
 
-        # Read a frame from the webcam stream
+        # lettura di un frame della webcam
         ret, frame = cap.read()
         if not ret:
             st.error("Failed to capture image.")
             break
 
-        # Get the dimensions of the frame
-        height, width, _ = frame.shape
-
-        # Define the center and axes of the oval
-        center = (width // 2, height // 2)
-        axes = (width // 6, height // 3)  # Half the width and height of the frame
-
-        # Define the color and thickness of the oval
-        color = (0, 255, 0)  # Green color in BGR format
-        thickness = 2
-
-        # Convert the frame to RGB format
+        # conversione a formato rgb
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame_rgb_flipped = cv2.flip(frame_rgb, 1)
         
+        # aggiunta dell'ovale al frame
         frame_with_oval = frame_rgb_flipped
+        add_oval(frame_with_oval)
 
-        cv2.ellipse(frame_with_oval, center, axes, angle=0, startAngle=0, endAngle=360, color=color, thickness=thickness)
-
-        # prediction of age of frame
+        # pre-processing del frame per la predizione
         resized_gray_image = process_frame(frame_rgb_flipped)
 
+        # previsione dell'età del frame
         pred_age = model.predict(resized_gray_image, verbose=0)
 
+        # trasformazione delle età predette da float a intero
         pred_age = np.round(pred_age).astype(int)
         pred_age = pred_age.reshape(-1)
 
+        # chiamata funzione per aggiungere età predetta a frame
         show_age(pred_age, frame_with_oval)
 
-        # Display the frame
+        # stampa del frame
         stframe.image(frame_with_oval, channels="RGB")
 
-
-
-        # Add a small delay to make the loop run at a reasonable speed
+        # sleep
         cv2.waitKey(1)
 
         
     cap.release()
 
+def add_oval(frame):
+
+    # dimensioni del frame
+    height, width, _ = frame.shape
+
+    # definizione centro e assi dell'ovale
+    center = (width // 2, height // 2)
+    axes = (width // 6, height // 3) 
+
+    # definizione colore e spessore ovale
+    color = (0, 255, 0)  # verde in formato BGR
+    thickness = 2
+    
+    cv2.ellipse(frame, center, axes, angle=0, startAngle=0, endAngle=360, color=color, thickness=thickness)
+
 def show_age(pred_age, frame):
 
+    # variabile contenente il testo da mostrare
     text = f"Age: {pred_age//100}"
 
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 1
+    # impostazione del font
+    font = cv2.FONT_HERSHEY_DUPLEX
+    font_scale = 0.7
+    thickness = 1
 
-    # Choose the thickness of the line
-    thickness = 2
-
-    # Determine the size of the text
-    text_size, _ = cv2.getTextSize(text, font, font_scale, thickness)
-
-    # Calculate the position to put the text (bottom-left corner)
+    # posizionamento del testo
     text_x = 10
     text_y = frame.shape[0] - 10  # Adjust the y-coordinate as needed
 
-    # Add text to the image
+    # aggiunta del testo all'immagine
     cv2.putText(frame, text, (text_x, text_y), font, font_scale, (255, 255, 255), thickness)
 
 
 def process_frame(frame):
     
+    # dimensioni del frame della webcam
     height, width, _ = frame.shape
 
     # Crop the image
-    # Define the crop box (left, upper, right, lower)
+    # definzione della crop_box sopra e sotto
     upper = height // 6
     lower = height - (height // 6)
     crop_height = lower - upper
 
-    # Calculate left and right to make the crop box square
+    # calcolo di sinistra e destra per rendere l'immagine quadrata
     center_x = width // 2
     half_crop_width = crop_height // 2
     left = max(0, center_x - half_crop_width)
     right = min(width, center_x + half_crop_width)
 
-    # Define the crop box (left, upper, right, lower)
+    # definizione della crop_box
     crop_box = (left, upper, right, lower)
 
-    cropped_image = frame[crop_box[1]:crop_box[3], crop_box[0]:crop_box[2]]
-
-    gray_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
-
-    resized_gray_image = cv2.resize(gray_image, (128, 128), interpolation=cv2.INTER_LANCZOS4)
-    
-    np.save("./output.jpg", frame)
-
-    resized_gray_image = np.expand_dims(resized_gray_image, axis=-1)
-
+    # applicazione delle trasformazioni all'immagine
+    cropped_image = frame[crop_box[1]:crop_box[3], crop_box[0]:crop_box[2]] # cropping
+    gray_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY) # grayscaling
+    resized_gray_image = cv2.resize(gray_image, (128, 128), interpolation=cv2.INTER_LANCZOS4) # resizing
+    resized_gray_image = np.expand_dims(resized_gray_image, axis=-1) # aumento di dimensioni
     resized_gray_image = np.expand_dims(resized_gray_image, axis=0)
 
     return resized_gray_image
