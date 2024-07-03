@@ -2,15 +2,24 @@ import cv2
 import streamlit as st
 import numpy as np
 
+from PIL import Image 
+
 import os
 # impostazione della cartella di esecuzione corretta
 script_dir = os.path.dirname(__file__)
 os.chdir(script_dir)
 
-# caricamento del modello
+
 from tensorflow.keras.models import load_model
 
-model = load_model("age_prediction_model.keras")
+# caricamento del modello
+need_loading = 1
+
+if need_loading:
+
+    model = load_model("age_prediction_model.keras")
+
+    need_loading += 1
 
 # titolo dell'applicazione
 st.title("Age Prediction")
@@ -21,10 +30,6 @@ cap = None
 # Variable to store the last captured frame
 captured_frame = None
 
-# Start and stop buttons
-start_button = st.button("Start")
-stop_button = st.button("Stop")
-
 # frame webcam
 stframe = st.empty()
 
@@ -34,9 +39,6 @@ captured_frame = None
 
 
 def video_capture():
-    
-    global take_picture_button
-    global captured_frame
 
     # Open the webcam
     cap = cv2.VideoCapture(0)
@@ -75,16 +77,44 @@ def video_capture():
 
         cv2.ellipse(frame_with_oval, center, axes, angle=0, startAngle=0, endAngle=360, color=color, thickness=thickness)
 
+        # prediction of age of frame
+        resized_gray_image = process_frame(frame_rgb_flipped)
+
+        pred_age = model.predict(resized_gray_image)
+
+        show_age(pred_age, frame_with_oval)
+
         # Display the frame
         stframe.image(frame_with_oval, channels="RGB")
 
-        process_frame(frame_rgb_flipped)
 
         # Add a small delay to make the loop run at a reasonable speed
         cv2.waitKey(1)
 
         
     cap.release()
+
+def show_age(pred_age, frame):
+
+    print(pred_age)
+
+    text = f"Age: {pred_age}"
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 1
+
+    # Choose the thickness of the line
+    thickness = 2
+
+    # Determine the size of the text
+    text_size, _ = cv2.getTextSize(text, font, font_scale, thickness)
+
+    # Calculate the position to put the text (bottom-left corner)
+    text_x = 10
+    text_y = frame.shape[0] - 10  # Adjust the y-coordinate as needed
+
+    # Add text to the image
+    cv2.putText(frame, text, (text_x, text_y), font, font_scale, (255, 255, 255), thickness)
 
 
 def process_frame(frame):
@@ -106,12 +136,17 @@ def process_frame(frame):
     # Define the crop box (left, upper, right, lower)
     crop_box = (left, upper, right, lower)
 
-    cropped_image_np = frame[crop_box[1]:crop_box[3], crop_box[0]:crop_box[2]]
+    cropped_image = frame[crop_box[1]:crop_box[3], crop_box[0]:crop_box[2]]
+
+    gray_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
+
+    resized_gray_image = cv2.resize(gray_image, (128, 128), interpolation=cv2.INTER_LANCZOS4)
+
+    resized_gray_image = np.expand_dims(resized_gray_image, axis=-1)
+
+    resized_gray_image = np.expand_dims(resized_gray_image, axis=0)
+
+    return resized_gray_image
     
 
-if start_button:
-    video_capture()
-
-
-if stop_button:
-    cap = None
+video_capture()
