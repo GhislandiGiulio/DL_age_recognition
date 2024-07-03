@@ -245,31 +245,31 @@ model_es = EarlyStopping(monitor='val_loss', mode='min', patience=3, restore_bes
 model.summary()
 
 # allenamento del modello
-#history = model.fit(x=train_img_arr, 
-#                    y=[train_age_arr], 
-#                    batch_size=BATCH_SIZE, 
-#                    epochs=EPOCHS, 
-#                    validation_data=(valid_img_arr, [valid_age_arr]),
-#                    callbacks=[lr_scheduler, model_es]
-#                    )
+history = model.fit(x=train_img_arr, 
+                    y=[train_age_arr], 
+                    batch_size=BATCH_SIZE, 
+                    epochs=EPOCHS, 
+                    validation_data=(valid_img_arr, [valid_age_arr]),
+                    callbacks=[lr_scheduler, model_es]
+                    )
 
 # salvataggio del modello
-#model.save(f"age_prediction_model.keras")
+model.save(f"age_prediction_model2.keras")
 
 ###
 ### Test & Risultati
 ###
 
-#history_df = pd.DataFrame(history.history)
-#history_df.head()
+history_df = pd.DataFrame(history.history)
+history_df.head()
 
 # plot del MAE per l'età
 plt.figure(figsize=(10, 8))
 
 plt.title("Age MAE")
 
-#plt.plot(history_df["mae"])
-#plt.plot(history_df["val_mae"])
+plt.plot(history_df["mae"])
+plt.plot(history_df["val_mae"])
 
 plt.legend(["train", "valid"])
 
@@ -284,13 +284,16 @@ model = load_model("age_prediction_model.keras")
 # fase di testing
 pred_age = model.predict(test_img_arr, verbose=0)
 pred_age = np.round(pred_age).astype(int)
+pred_age = pred_age.reshape(-1)
 
-errors = np.abs(pred_age - df_test["age"])
+errors = np.abs(pred_age - df_test["age"].values)
 
-# calcolo del mae sul test
 mae = np.mean(errors)
 
-print("Mean Absolute Error:", mae)
+print(f"MAE: {mae}")
+
+for i in range(20):
+    print(f"Predicted: {pred_age[i]}, Actual: {df_test['age'].values[i]}")
 
 # aggiunto al df di test la colonna predetta
 df_test["pred_age"] = pred_age
@@ -302,7 +305,7 @@ def visualize_results(df: pd.DataFrame):
     for i, ax in enumerate(axes.ravel()):
         if i < len(df):
             a = np.random.randint(1, len(df), 1)[0]
-            gender_dict = {0: 'Male', 1: 'Female'}
+
             img_path = df.loc[a][['image_path']].values[0]
             img_age = df.loc[a][['age']].values[0]
             img_pred_age = df.loc[a][['pred_age']].values[0]
