@@ -254,7 +254,7 @@ history = model.fit(x=train_img_arr,
                     )
 
 # salvataggio del modello
-model.save(f"age_prediction_model2.keras")
+model.save(f"age_prediction_model.keras")
 
 ###
 ### Test & Risultati
