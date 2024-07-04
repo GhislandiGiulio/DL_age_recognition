@@ -134,7 +134,7 @@ def process_frame(frame):
     # applicazione delle trasformazioni all'immagine
     cropped_image = frame[crop_box[1]:crop_box[3], crop_box[0]:crop_box[2]] # cropping
     gray_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY) # grayscaling
-    resized_gray_image = cv2.resize(gray_image, (128, 128), interpolation=cv2.INTER_LANCZOS4) # resizing
+    resized_gray_image = cv2.resize(gray_image, (128, 128), interpolation=Image.LANCZOS) # resizing
     resized_gray_image = np.expand_dims(resized_gray_image, axis=-1) # aumento di dimensioni
     resized_gray_image = np.expand_dims(resized_gray_image, axis=0)
 
