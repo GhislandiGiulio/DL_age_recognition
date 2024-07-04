@@ -1,1 +1,8 @@
+DATASET (è anche sulla repo):
 https://www.kaggle.com/datasets/jangedoo/utkface-new?select=crop_part1
+
+GIT: 
+https://github.com/GhislandiGiulio/DL_age_recognition.git
+
+PRESENTAZIONE: 
+https://www.canva.com/design/DAGJ1ipT0RY/WlEsrxJk-OCp_cATMp71zQ/edit?utm_content=DAGJ1ipT0RY&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
